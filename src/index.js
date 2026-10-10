@@ -1,6 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import conectarDB from './config/db.js'; // <-- 1. Importar la función de conexión
+import conectarDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import appointmentRoutes from './routes/appointmentRoutes.js';
 
