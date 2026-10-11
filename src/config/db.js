@@ -1,16 +1,16 @@
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
 
 dotenv.config();
 
-const conectarDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log("¡Conectado exitosamente a MongoDB Atlas!");
-  } catch (error) {
-    console.error("Error al conectar a MongoDB:", error);
-    process.exit(1);
-  }
+const connectDB = async () => {
+    try {
+        const conn = await mongoose.connect(process.env.MONGO_URI);
+        console.log(`Base de datos conectada exitosamente a MongoDB: ${conn.connection.host}`);
+    } catch (error) {
+        console.error('Error al conectar a MongoDB:', error.message);
+        process.exit(1);
+    }
 };
 
-export default conectarDB;
+module.exports = connectDB;

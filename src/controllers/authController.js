@@ -1,106 +1,67 @@
-import User from '../models/User.js';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+const User = require('../models/User');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 // Registrar un nuevo usuario
-export const registrarUsuario = async (req, res) => {
-  try {
-    const { nombre, email, password, rol } = req.body;
+exports.register = async (req, res) => {
+    try {
+        const { name, email, password, role } = req.body;
 
-    const existeUsuario = await User.findOne({ email });
-    if (existeUsuario) {
-      return res.status(400).json({ mensaje: 'El correo electrónico ya está registrado' });
+        // Verificar si el usuario ya existe
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'El correo ya está registrado' });
+        }
+
+        // Cifrar la contraseña (Hash)
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Crear el usuario
+        const newUser = new User({
+            name,
+            email,
+            password: hashedPassword,
+            role: role || 'paciente'
+        });
+
+        await newUser.save();
+        res.status(201).json({ message: 'Usuario registrado exitosamente' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error en el servidor', error: error.message });
     }
-
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
-
-    const nuevoUsuario = new User({
-      nombre,
-      email,
-      password: passwordHash,
-      rol: rol || 'paciente'
-    });
-
-    await nuevoUsuario.save();
-
-    res.status(201).json({
-      mensaje: 'Usuario registrado exitosamente',
-      usuario: {
-        id: nuevoUsuario._id,
-        nombre: nuevoUsuario.nombre,
-        email: nuevoUsuario.email,
-        rol: nuevoUsuario.rol
-      }
-    });
-
-  } catch (error) {
-    console.error('Error al registrar usuario:', error);
-    res.status(500).json({ mensaje: 'Hubo un error en el servidor' });
-  }
 };
 
 // Iniciar sesión
-export const loginUsuario = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+exports.login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
 
-    const usuario = await User.findOne({ email });
-    if (!usuario) {
-      return res.status(404).json({ mensaje: 'Usuario no encontrado' });
+        // Buscar usuario por correo
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ message: 'Credenciales inválidas' });
+        }
+
+        // Validar contraseña
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Credenciales inválidas' });
+        }
+
+        // Crear token JWT (asegúrate de tener una palabra secreta o usa una por defecto)
+        const token = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.JWT_SECRET || 'secreto_super_seguro',
+            { expiresIn: '1d' }
+        );
+
+        res.json({
+            message: 'Inicio de sesión exitoso',
+            token,
+            user: { id: user._id, name: user.name, email: user.email, role: user.role }
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Error en el servidor', error: error.message });
     }
-
-    const passwordCorrecto = await bcrypt.compare(password, usuario.password);
-    if (!passwordCorrecto) {
-      return res.status(401).json({ mensaje: 'Contraseña incorrecta' });
-    }
-
-    const token = jwt.sign(
-      { id: usuario._id, rol: usuario.rol },
-      process.env.JWT_SECRET || 'secreto_super_seguro',
-      { expiresIn: '8h' }
-    );
-
-    res.json({
-      mensaje: 'Inicio de sesión exitoso',
-      token,
-      usuario: {
-        id: usuario._id,
-        nombre: usuario.nombre,
-        email: usuario.email,
-        rol: usuario.rol
-      }
-    });
-
-  } catch (error) {
-    console.error('Error al iniciar sesión:', error);
-    res.status(500).json({ mensaje: 'Hubo un error en el servidor' });
-  }
-};
-
-// Obtener el perfil del usuario autenticado (requiere el token decodificado por el middleware)
-export const getProfile = async (req, res) => {
-  try {
-    // req.usuario viene del middleware verifyToken (contiene el id que guardamos en el token)
-    const usuario = await User.findById(req.usuario.id).select('-password');
-    if (!usuario) {
-      return res.status(404).json({ mensaje: 'Usuario no encontrado' });
-    }
-    res.json(usuario);
-  } catch (error) {
-    console.error('Error al obtener perfil:', error);
-    res.status(500).json({ mensaje: 'Hubo un error en el servidor' });
-  }
-};
-
-// Obtener la lista de doctores registrados en el sistema
-export const getDoctors = async (req, res) => {
-  try {
-    // Buscamos usuarios cuyo rol sea 'medico' y excluimos el campo password
-    const doctores = await User.find({ rol: 'medico' }).select('-password');
-    res.json(doctores);
-  } catch (error) {
-    console.error('Error al obtener doctores:', error);
-    res.status(500).json({ mensaje: 'Hubo un error en el servidor' });
-  }
 };

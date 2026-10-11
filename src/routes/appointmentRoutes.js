@@ -1,18 +1,17 @@
-import express from 'express';
-import { 
-  obtenerCitas, 
-  crearCita, 
-  actualizarCita, 
-  eliminarCita 
-} from '../controllers/appointmentcontroller.js';
-import { verifyToken } from '../middlewares/authMiddleware.js';
-
+const express = require('express');
 const router = express.Router();
+const { 
+    createAppointment, 
+    getAppointments, 
+    updateAppointment, 
+    deleteAppointment 
+} = require('../controllers/appointmentController');
+const verifyToken = require('../middlewares/authMiddleware');
 
-// Todas estas rutas requerirán que el usuario haya iniciado sesión (verifyToken)
-router.get('/', verifyToken, obtenerCitas);
-router.post('/', verifyToken, crearCita);
-router.put('/:id', verifyToken, actualizarCita);
-router.delete('/:id', verifyToken, eliminarCita);
+// Todas estas rutas requieren que el usuario haya iniciado sesión (Token válido)
+router.get('/', verifyToken, getAppointments);
+router.post('/', verifyToken, createAppointment);
+router.put('/:id', verifyToken, updateAppointment);
+router.delete('/:id', verifyToken, deleteAppointment);
 
-export default router;
+module.exports = router;

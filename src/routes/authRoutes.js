@@ -1,20 +1,8 @@
-import express from 'express';
-import { 
-  registrarUsuario, 
-  loginUsuario, 
-  getProfile, 
-  getDoctors 
-} from '../controllers/authController.js';
-import { verifyToken } from '../middlewares/authMiddleware.js';
-
+const express = require('express');
 const router = express.Router();
+const { register, login } = require('../controllers/authController');
 
-// Rutas públicas
-router.post('/register', registrarUsuario);
-router.post('/login', loginUsuario);
+router.post('/register', register);
+router.post('/login', login);
 
-// Rutas protegidas y públicas de usuarios/doctores
-router.get('/profile', verifyToken, getProfile);
-router.get('/doctors', getDoctors);
-
-export default router;
+module.exports = router;
