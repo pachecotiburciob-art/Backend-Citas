@@ -1,34 +1,33 @@
 const express = require('express');
+const dotenv = require('dotenv');
 const cors = require('cors');
-const path = require('path');
-const connectDB = require('./config/db'); // Importamos la conexión a MongoDB
+const connectDB = require('./config/db');
 
+// Cargar variables de entorno
+dotenv.config();
+
+// Inicializar Express
 const app = express();
-const PORT = process.env.PORT || 4000;
 
-// Conectar a MongoDB Atlas
+// Middlewares globales
+app.use(express.json());
+app.use(cors());
+
+// Conectar a la Base de Datos (MongoDB Atlas)
 connectDB();
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
+// Rutas principales de la API
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/appointments', require('./routes/appointmentRoutes'));
 
-// Servir archivos estáticos del frontend (carpeta public)
-app.use(express.static(path.join(__dirname, '../public')));
-
-// Rutas de la API
-const authRoutes = require('./routes/authRoutes');
-const appointmentRoutes = require('./routes/appointmentRoutes');
-
-app.use('/api/auth', authRoutes);
-app.use('/api/appointments', appointmentRoutes);
-
-// Ruta comodín para que el frontend cargue correctamente
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/index.html'));
+// Ruta de prueba para verificar que el servidor responde
+app.get('/', (req, res) => {
+    res.json({ message: 'API de Citas Médicas funcionando correctamente' });
 });
 
-// Iniciar servidor
+// Definir el puerto (Railway asigna uno automáticamente o usa el 4000 por defecto localmente)
+const PORT = process.env.PORT || 4000;
+
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
