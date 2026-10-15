@@ -121,17 +121,14 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            // Mostrar rol y nombre en pantalla
             document.getElementById('userRoleBadge').textContent = userRole === 'doctor' ? 'Médico' : 'Paciente';
             document.getElementById('welcomeUser').textContent = `Bienvenido, ${userName}`;
 
             if (userRole === 'doctor') {
-                // Si es doctor, ocultamos el formulario de agendar cita y ajustamos el grid
                 document.getElementById('sectionPaciente').style.display = 'none';
                 document.getElementById('sectionListado').classList.remove('lg:col-span-2');
                 document.getElementById('sectionListado').classList.add('lg:col-span-3');
             } else {
-                // Si es paciente, cargamos la lista de doctores
                 cargarMedicos();
             }
         });
@@ -169,7 +166,7 @@
         async function agendarCita(event) {
             event.preventDefault();
             const doctor = document.getElementById('selectMedico').value;
-            const date = document.getElementById('fechaCita').value;
+            const date = document.getElementById('fechaCita5').value || document.getElementById('fechaCita').value;
             const reason = document.getElementById('motivoCita').value;
 
             try {

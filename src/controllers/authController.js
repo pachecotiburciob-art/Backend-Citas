@@ -19,7 +19,6 @@ const register = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Asignar correctamente el rol recibido del frontend
         const userRole = (role === 'doctor') ? 'doctor' : 'patient';
 
         const newUser = new User({
