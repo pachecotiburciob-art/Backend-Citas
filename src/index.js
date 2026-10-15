@@ -1,33 +1,43 @@
 const express = require('express');
-const dotenv = require('dotenv');
+const mongoose = require('mongoose');
 const cors = require('cors');
-const connectDB = require('./config/db');
+const path = require('path'); // <-- 1. Importamos path para manejar rutas de carpetas
+require('dotenv').config();
 
-// Cargar variables de entorno
-dotenv.config();
-
-// Inicializar Express
 const app = express();
 
-// Middlewares globales
-app.use(express.json());
+// Middlewares
 app.use(cors());
+app.use(express.json());
 
-// Conectar a la Base de Datos (MongoDB Atlas)
-connectDB();
+// 2. CONFIGURACIÓN DE ARCHIVOS ESTÁTICOS (Esto hace que cargue tu index.html y dashboard.html)
+// Usamos '../public' si tu archivo index.js está dentro de la carpeta 'src'
+app.use(express.static(path.join(__dirname, '../public')));
 
-// Rutas principales de la API
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/appointments', require('./routes/appointmentRoutes'));
+// Importar Rutas de la API
+const authRoutes = require('./routes/authRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
 
-// Ruta de prueba para verificar que el servidor responde
+// Usar Rutas
+app.use('/api/auth', authRoutes);
+app.use('/api/appointments', appointmentRoutes);
+
+// Ruta de prueba raíz (para que aparezca el mensaje de que la API funciona)
 app.get('/', (req, res) => {
-    res.json({ message: 'API de Citas Médicas funcionando correctamente' });
+    res.json({ message: "API de Citas Médicas funcionando correctamente" });
 });
 
-// Definir el puerto (Railway asigna uno automáticamente o usa el 4000 por defecto localmente)
-const PORT = process.env.PORT || 4000;
+// Conexión a MongoDB Atlas y arranque del servidor
+const PORT = process.env.PORT || 3000;
+const MONGO_URI = process.env.MONGO_URI;
 
-app.listen(PORT, () => {
-    console.log(`Servidor corriendo en el puerto ${PORT}`);
-});
+mongoose.connect(MONGO_URI)
+    .then(() => {
+        console.log('Conectado a MongoDB Atlas con éxito');
+        app.listen(PORT, () => {
+            console.log(`Servidor corriendo en el puerto ${PORT}`);
+        });
+    })
+    .catch((error) => {
+        console.error('Error al conectar a la base de datos:', error.message);
+    });
