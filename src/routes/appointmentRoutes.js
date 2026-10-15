@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { createAppointment, getAppointments, updateAppointmentStatus } = require('../controllers/appointmentController');
-const authMiddleware = require('../middleware/authMiddleware'); // Ajusta según tu middleware de token
+const { createAppointment, getAppointments, updateAppointmentStatus } = require('../controllers/appointmentcontroller');
+const authMiddleware = require('../middleware/authMiddleware');
 
 router.post('/', authMiddleware, createAppointment);
 router.get('/', authMiddleware, getAppointments);
