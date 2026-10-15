@@ -52,6 +52,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Fecha y Hora</label>
+                    <!-- Restricción min para bloquear días y horas pasadas -->
                     <input type="datetime-local" id="fechaCita" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                 </div>
                 <div>
@@ -93,7 +94,7 @@
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="border-b border-slate-200 text-slate-400 uppercase text-xs">
-                            <th class="py-3 px-4">Participante</th>
+                            <th class="py-3 px-4">Médico / Paciente</th>
                             <th class="py-3 px-4">Fecha</th>
                             <th class="py-3 px-4">Motivo</th>
                             <th class="py-3 px-4">Estado</th>
@@ -124,6 +125,11 @@
             document.getElementById('userRoleBadge').textContent = userRole === 'doctor' ? 'Médico' : 'Paciente';
             document.getElementById('welcomeUser').textContent = `Bienvenido, ${userName}`;
 
+            // Configurar fecha mínima en el input para bloquear días y horas pasadas
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('fechaCita').min = now.toISOString().slice(0, 16);
+
             if (userRole === 'doctor') {
                 document.getElementById('sectionPaciente').style.display = 'none';
                 document.getElementById('sectionListado').classList.remove('lg:col-span-2');
@@ -131,6 +137,8 @@
             } else {
                 cargarMedicos();
             }
+
+            cargarCitas();
         });
 
         async function cargarMedicos() {
@@ -156,6 +164,60 @@
             }
         }
 
+        async function cargarCitas() {
+            try {
+                const response = await fetch(`${API_URL}/api/appointments`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const citas = await response.json();
+
+                const tbody = document.getElementById('tablaCitasBody');
+                const totalCitasEl = document.getElementById('totalCitas');
+                const citasPendientesEl = document.getElementById('citasPendientes');
+                const citasConfirmadasEl = document.getElementById('citasConfirmadas');
+
+                if (Array.isArray(citas) && citas.length > 0) {
+                    totalCitasEl.textContent = citas.length;
+                    let pendientes = 0;
+                    let confirmadas = 0;
+
+                    tbody.innerHTML = '';
+                    citas.forEach(cita => {
+                        if (cita.status === 'confirmed') confirmadas++;
+                        else pendientes++;
+
+                        const fechaFormateada = new Date(cita.date).toLocaleString();
+                        const nombreContraparte = userRole === 'doctor' 
+                            ? (cita.patient ? cita.patient.name : 'Paciente') 
+                            : (cita.doctor ? `Dr. ${cita.doctor.name}` : 'Médico');
+
+                        tbody.innerHTML += `
+                            <tr class="border-b border-slate-100 hover:bg-slate-50">
+                                <td class="py-3 px-4 font-medium text-slate-800">${nombreContraparte}</td>
+                                <td class="py-3 px-4 text-slate-600">${fechaFormateada}</td>
+                                <td class="py-3 px-4 text-slate-600">${cita.reason}</td>
+                                <td class="py-3 px-4">
+                                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full ${cita.status === 'confirmed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}">
+                                        ${cita.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    citasPendientesEl.textContent = pendientes;
+                    citasConfirmadasEl.textContent = confirmadas;
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">No hay citas registradas aún.</td></tr>`;
+                    totalCitasEl.textContent = '0';
+                    citasPendientesEl.textContent = '0';
+                    citasConfirmadasEl.textContent = '0';
+                }
+            } catch (error) {
+                console.error("Error al cargar citas:", error);
+            }
+        }
+
         function showAlert(message, isError = true) {
             const alerta = document.getElementById('alertaDashboard');
             alerta.textContent = message;
@@ -166,7 +228,7 @@
         async function agendarCita(event) {
             event.preventDefault();
             const doctor = document.getElementById('selectMedico').value;
-            const date = document.getElementById('fechaCita5').value || document.getElementById('fechaCita').value;
+            const date = document.getElementById('fechaCita').value;
             const reason = document.getElementById('motivoCita').value;
 
             try {
@@ -184,6 +246,7 @@
                 if (response.ok) {
                     showAlert("¡Cita agendada con éxito!", false);
                     document.getElementById('formCita').reset();
+                    cargarCitas();
                 } else {
                     showAlert(data.message || "Error al agendar cita");
                 }
