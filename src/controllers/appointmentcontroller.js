@@ -1,62 +1,85 @@
-const Appointment = require('../models/Appointment');
+const Appointment = require('../models/Appointment'); // Ajusta la ruta si es distinta
 
-// Crear una cita (Create)
-exports.createAppointment = async (req, res) => {
+// Crear una nueva cita (Paciente)
+const createAppointment = async (req, res) => {
     try {
-        const { doctor, date } = req.body;
-        
+        const { doctor, date, reason } = req.body;
+        const patientId = req.user.id; // Obtenido del token JWT del middleware de autenticación
+
+        if (!doctor || !date || !reason) {
+            return res.status(400).json({ message: "Por favor, completa todos los campos de la cita." });
+        }
+
         const newAppointment = new Appointment({
-            patient: req.user.id, // Obtenido del token JWT del middleware de autenticación
+            patient: patientId,
             doctor,
-            date
+            date,
+            reason, // Guarda los síntomas o motivo
+            status: 'pending' // Por defecto inicia pendiente
         });
 
         await newAppointment.save();
-        res.status(201).json({ message: 'Cita médica creada exitosamente', newAppointment });
+        res.status(201).json({ message: "Cita agendada con éxito", appointment: newAppointment });
     } catch (error) {
-        res.status(500).json({ message: 'Error al crear la cita', error: error.message });
+        console.error("Error al crear cita:", error);
+        res.status(500).json({ message: "Error en el servidor al agendar la cita", error: error.message });
     }
 };
 
-// Obtener todas las citas (Read)
-exports.getAppointments = async (req, res) => {
+// Obtener citas (Filtra automáticamente si es doctor o paciente y trae los nombres y síntomas)
+const getAppointments = async (req, res) => {
     try {
-        const appointments = await Appointment.find().populate('patient', 'name email');
+        let filter = {};
+        if (req.user.role === 'doctor') {
+            filter.doctor = req.user.id;
+        } else {
+            filter.patient = req.user.id;
+        }
+
+        const appointments = await Appointment.find(filter)
+            .populate('patient', 'name email')
+            .populate('doctor', 'name email')
+            .sort({ date: 1 });
+
         res.json(appointments);
     } catch (error) {
-        res.status(500).json({ message: 'Error al obtener las citas', error: error.message });
+        console.error("Error al obtener citas:", error);
+        res.status(500).json({ message: "Error al obtener las citas" });
     }
 };
 
-// Actualizar una cita (Update)
-exports.updateAppointment = async (req, res) => {
+// Actualizar estado de la cita (Confirmar / Poner pendiente) - Solo para el médico
+const updateAppointmentStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const updatedData = req.body;
+        const { status } = req.body; // 'confirmed' o 'pending'
 
-        const appointment = await Appointment.findByIdAndUpdate(id, updatedData, { new: true });
-        if (!appointment) {
-            return res.status(404).json({ message: 'Cita no encontrada' });
+        if (!['confirmed', 'pending'].includes(status)) {
+            return res.status(400).json({ message: "Estado no válido" });
         }
 
-        res.json({ message: 'Cita actualizada exitosamente', appointment });
+        const appointment = await Appointment.findById(id);
+        if (!appointment) {
+            return res.status(404).json({ message: "Cita no encontrada" });
+        }
+
+        // Verificar que el doctor que intenta modificar sea el asignado a la cita
+        if (req.user.role === 'doctor' && appointment.doctor.toString() !== req.user.id) {
+            return res.status(403).json({ message: "No tienes permiso para modificar esta cita" });
+        }
+
+        appointment.status = status;
+        await appointment.save();
+
+        res.json({ message: "Estado de cita actualizado exitosamente", appointment });
     } catch (error) {
-        res.status(500).json({ message: 'Error al actualizar la cita', error: error.message });
+        console.error("Error al actualizar estado:", error);
+        res.status(500).json({ message: "Error al actualizar el estado de la cita" });
     }
 };
 
-// Eliminar una cita (Delete)
-exports.deleteAppointment = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const appointment = await Appointment.findByIdAndDelete(id);
-        
-        if (!appointment) {
-            return res.status(404).json({ message: 'Cita no encontrada' });
-        }
-
-        res.json({ message: 'Cita eliminada exitosamente' });
-    } catch (error) {
-        res.status(500).json({ message: 'Error al eliminar la cita', error: error.message });
-    }
+module.exports = {
+    createAppointment,
+    getAppointments,
+    updateAppointmentStatus
 };

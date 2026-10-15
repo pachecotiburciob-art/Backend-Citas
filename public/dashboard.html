@@ -52,11 +52,10 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Fecha y Hora</label>
-                    <!-- Restricción min para bloquear días y horas pasadas -->
                     <input type="datetime-local" id="fechaCita" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Motivo de Consulta</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Motivo de Consulta / Síntomas</label>
                     <textarea id="motivoCita" rows="3" required placeholder="Describe brevemente tus síntomas..." class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"></textarea>
                 </div>
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition duration-200 shadow-md">
@@ -94,10 +93,10 @@
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="border-b border-slate-200 text-slate-400 uppercase text-xs">
-                            <th class="py-3 px-4">Médico / Paciente</th>
+                            <th class="py-3 px-4">Paciente / Médico</th>
                             <th class="py-3 px-4">Fecha</th>
-                            <th class="py-3 px-4">Motivo</th>
-                            <th class="py-3 px-4">Estado</th>
+                            <th class="py-3 px-4">Síntomas / Motivo</th>
+                            <th class="py-3 px-4">Estado / Acción</th>
                         </tr>
                     </thead>
                     <tbody id="tablaCitasBody">
@@ -125,10 +124,12 @@
             document.getElementById('userRoleBadge').textContent = userRole === 'doctor' ? 'Médico' : 'Paciente';
             document.getElementById('welcomeUser').textContent = `Bienvenido, ${userName}`;
 
-            // Configurar fecha mínima en el input para bloquear días y horas pasadas
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('fechaCita').min = now.toISOString().slice(0, 16);
+            const fechaInput = document.getElementById('fechaCita');
+            if (fechaInput) {
+                fechaInput.min = now.toISOString().slice(0, 16);
+            }
 
             if (userRole === 'doctor') {
                 document.getElementById('sectionPaciente').style.display = 'none';
@@ -186,21 +187,45 @@
                         if (cita.status === 'confirmed') confirmadas++;
                         else pendientes++;
 
-                        const fechaFormateada = new Date(cita.date).toLocaleString();
+                        const fechaFormateada = cita.date ? new Date(cita.date).toLocaleString() : 'Fecha no especificada';
                         const nombreContraparte = userRole === 'doctor' 
-                            ? (cita.patient ? cita.patient.name : 'Paciente') 
+                            ? (cita.patient ? cita.patient.name : 'Paciente desconocido') 
                             : (cita.doctor ? `Dr. ${cita.doctor.name}` : 'Médico');
+
+                        const motivoTexto = cita.reason || cita.symptoms || 'Sin motivo especificado';
+
+                        // Botones de acción si es doctor, de lo contrario solo badge de estado
+                        let estadoHtml = '';
+                        if (userRole === 'doctor') {
+                            if (cita.status === 'confirmed') {
+                                estadoHtml = `
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-600">Confirmada</span>
+                                        <button onclick="cambiarEstado('${cita._id}', 'pending')" class="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded hover:bg-amber-200">Hacer Pendiente</button>
+                                    </div>
+                                `;
+                            } else {
+                                estadoHtml = `
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-600">Pendiente</span>
+                                        <button onclick="cambiarEstado('${cita._id}', 'confirmed')" class="text-xs bg-emerald-600 text-white px-2.5 py-1 rounded hover:bg-emerald-700 shadow-sm">Confirmar</button>
+                                    </div>
+                                `;
+                            }
+                        } else {
+                            estadoHtml = `
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full ${cita.status === 'confirmed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}">
+                                    ${cita.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}
+                                </span>
+                            `;
+                        }
 
                         tbody.innerHTML += `
                             <tr class="border-b border-slate-100 hover:bg-slate-50">
                                 <td class="py-3 px-4 font-medium text-slate-800">${nombreContraparte}</td>
                                 <td class="py-3 px-4 text-slate-600">${fechaFormateada}</td>
-                                <td class="py-3 px-4 text-slate-600">${cita.reason}</td>
-                                <td class="py-3 px-4">
-                                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full ${cita.status === 'confirmed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}">
-                                        ${cita.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}
-                                    </span>
-                                </td>
+                                <td class="py-3 px-4 text-slate-600 font-normal">${motivoTexto}</td>
+                                <td class="py-3 px-4">${estadoHtml}</td>
                             </tr>
                         `;
                     });
@@ -215,6 +240,27 @@
                 }
             } catch (error) {
                 console.error("Error al cargar citas:", error);
+            }
+        }
+
+        async function cambiarEstado(citaId, nuevoEstado) {
+            try {
+                const response = await fetch(`${API_URL}/api/appointments/${citaId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status: nuevoEstado })
+                });
+
+                if (response.ok) {
+                    cargarCitas(); // Recargar tabla y contadores al instante
+                } else {
+                    alert("Error al actualizar el estado de la cita");
+                }
+            } catch (error) {
+                console.error("Error de conexión:", error);
             }
         }
 

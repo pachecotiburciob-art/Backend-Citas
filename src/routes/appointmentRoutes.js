@@ -1,17 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const {
-    createAppointment,
-    getAppointments,
-    updateAppointment,
-    deleteAppointment
-} = require('../controllers/appointmentcontroller');
-const verifyToken = require('../middlewares/authMiddleware');
+const { createAppointment, getAppointments, updateAppointmentStatus } = require('../controllers/appointmentController');
+const authMiddleware = require('../middleware/authMiddleware'); // Ajusta según tu middleware de token
 
-// Todas estas rutas requieren que el usuario haya iniciado sesión
-router.get('/', verifyToken, getAppointments);
-router.post('/', verifyToken, createAppointment);
-router.put('/:id', verifyToken, updateAppointment);
-router.delete('/:id', verifyToken, deleteAppointment);
+router.post('/', authMiddleware, createAppointment);
+router.get('/', authMiddleware, getAppointments);
+router.put('/:id/status', authMiddleware, updateAppointmentStatus);
 
 module.exports = router;
