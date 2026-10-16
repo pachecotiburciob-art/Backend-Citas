@@ -188,13 +188,16 @@
                         else pendientes++;
 
                         const fechaFormateada = cita.date ? new Date(cita.date).toLocaleString() : 'Fecha no especificada';
-                        const nombreContraparte = userRole === 'doctor' 
-                            ? (cita.patient ? cita.patient.name : 'Paciente desconocido') 
-                            : (cita.doctor ? `Dr. ${cita.doctor.name}` : 'Médico');
+                        
+                        let nombreContraparte = 'Desconocido';
+                        if (userRole === 'doctor') {
+                            nombreContraparte = cita.patient && cita.patient.name ? cita.patient.name : 'Paciente';
+                        } else {
+                            nombreContraparte = cita.doctor && cita.doctor.name ? `Dr. ${cita.doctor.name}` : 'Médico';
+                        }
 
                         const motivoTexto = cita.reason || cita.symptoms || 'Sin motivo especificado';
 
-                        // Botones de acción si es doctor, de lo contrario solo badge de estado
                         let estadoHtml = '';
                         if (userRole === 'doctor') {
                             if (cita.status === 'confirmed') {
@@ -255,20 +258,13 @@
                 });
 
                 if (response.ok) {
-                    cargarCitas(); // Recargar tabla y contadores al instante
+                    cargarCitas();
                 } else {
                     alert("Error al actualizar el estado de la cita");
                 }
             } catch (error) {
                 console.error("Error de conexión:", error);
             }
-        }
-
-        function showAlert(message, isError = true) {
-            const alerta = document.getElementById('alertaDashboard');
-            alerta.textContent = message;
-            alerta.className = `mb-4 p-3 rounded-lg text-sm text-center font-medium ${isError ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-emerald-50 text-emerald-600 border border-emerald-200'}`;
-            alerta.classList.remove('hidden');
         }
 
         async function agendarCita(event) {
@@ -290,14 +286,30 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    showAlert("¡Cita agendada con éxito!", false);
+                    const alerta = document.getElementById('alertaDashboard');
+                    alerta.textContent = "¡Cita agendada con éxito!";
+                    alerta.className = "mb-4 p-3 rounded-lg text-sm text-center font-medium bg-emerald-50 text-emerald-600 border border-emerald-200";
+                    alerta.classList.remove('hidden');
+
                     document.getElementById('formCita').reset();
+                    
+                    // Restablecer la fecha mínima en el input
+                    const now = new Date();
+                    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                    document.getElementById('fechaCita').min = now.toISOString().slice(0, 16);
+
                     cargarCitas();
                 } else {
-                    showAlert(data.message || "Error al agendar cita");
+                    const alerta = document.getElementById('alertaDashboard');
+                    alerta.textContent = data.message || "Error al agendar cita";
+                    alerta.className = "mb-4 p-3 rounded-lg text-sm text-center font-medium bg-red-50 text-red-600 border border-red-200";
+                    alerta.classList.remove('hidden');
                 }
             } catch (error) {
-                showAlert("Error de conexión con el servidor");
+                const alerta = document.getElementById('alertaDashboard');
+                alerta.textContent = "Error de conexión con el servidor";
+                alerta.className = "mb-4 p-3 rounded-lg text-sm text-center font-medium bg-red-50 text-red-600 border border-red-200";
+                alerta.classList.remove('hidden');
             }
         }
 

@@ -1,12 +1,13 @@
-const Appointment = require('../models/Appointment'); // Ajusta la ruta si es distinta
+const Appointment = require('../models/Appointment');
 
-// Crear una nueva cita (Paciente)
 const createAppointment = async (req, res) => {
     try {
-        const { doctor, date, reason } = req.body;
-        const patientId = req.user.id; // Obtenido del token JWT del middleware de autenticación
+        const { doctor, date, reason, symptoms } = req.body;
+        const patientId = req.user.id;
 
-        if (!doctor || !date || !reason) {
+        const appointmentReason = reason || symptoms;
+
+        if (!doctor || !date || !appointmentReason) {
             return res.status(400).json({ message: "Por favor, completa todos los campos de la cita." });
         }
 
@@ -14,8 +15,8 @@ const createAppointment = async (req, res) => {
             patient: patientId,
             doctor,
             date,
-            reason, // Guarda los síntomas o motivo
-            status: 'pending' // Por defecto inicia pendiente
+            reason: appointmentReason,
+            status: 'pending'
         });
 
         await newAppointment.save();
@@ -26,7 +27,6 @@ const createAppointment = async (req, res) => {
     }
 };
 
-// Obtener citas (Filtra automáticamente si es doctor o paciente y trae los nombres y síntomas)
 const getAppointments = async (req, res) => {
     try {
         let filter = {};
@@ -48,11 +48,10 @@ const getAppointments = async (req, res) => {
     }
 };
 
-// Actualizar estado de la cita (Confirmar / Poner pendiente) - Solo para el médico
 const updateAppointmentStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body; // 'confirmed' o 'pending'
+        const { status } = req.body;
 
         if (!['confirmed', 'pending'].includes(status)) {
             return res.status(400).json({ message: "Estado no válido" });
@@ -63,7 +62,6 @@ const updateAppointmentStatus = async (req, res) => {
             return res.status(404).json({ message: "Cita no encontrada" });
         }
 
-        // Verificar que el doctor que intenta modificar sea el asignado a la cita
         if (req.user.role === 'doctor' && appointment.doctor.toString() !== req.user.id) {
             return res.status(403).json({ message: "No tienes permiso para modificar esta cita" });
         }
