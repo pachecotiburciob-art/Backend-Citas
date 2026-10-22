@@ -33,80 +33,137 @@
     </header>
 
     <!-- Contenido Principal -->
-    <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <main class="max-w-7xl mx-auto">
         
-        <!-- Sección Formulario (Visible solo para Pacientes) -->
-        <section id="sectionPaciente" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-1">
-            <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <span>📅</span> Agendar Cita Médica
-            </h2>
+        <!-- SECCIÓN PACIENTE -->
+        <div id="wrapperPaciente" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <section id="sectionPaciente" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-1">
+                <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <span>📅</span> Agendar Cita Médica
+                </h2>
+                <div id="alertaDashboard" class="hidden mb-4 p-3 rounded-lg text-sm text-center font-medium"></div>
+                <form id="formCita" class="space-y-4" onsubmit="agendarCita(event)">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Seleccionar Médico</label>
+                        <select id="selectMedico" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
+                            <option value="">Cargando médicos...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Fecha y Hora</label>
+                        <input type="datetime-local" id="fechaCita" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Motivo de Consulta / Síntomas</label>
+                        <textarea id="motivoCita" rows="3" required placeholder="Describe brevemente tus síntomas..." class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition duration-200 shadow-md">
+                        Confirmar Cita
+                    </button>
+                </form>
+            </section>
 
-            <div id="alertaDashboard" class="hidden mb-4 p-3 rounded-lg text-sm text-center font-medium"></div>
+            <section id="sectionListadoPaciente" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-2">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Mis Citas Médicas</h2>
+                        <p class="text-xs text-slate-500">Monitoreo de agenda personal</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-slate-400 uppercase text-xs">
+                                <th class="py-3 px-4">Médico</th>
+                                <th class="py-3 px-4">Fecha</th>
+                                <th class="py-3 px-4">Síntomas / Motivo</th>
+                                <th class="py-3 px-4">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaCitasBodyPaciente">
+                            <tr><td colspan="4" class="text-center py-6 text-slate-400">No hay citas registradas.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
 
-            <form id="formCita" class="space-y-4" onsubmit="agendarCita(event)">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Seleccionar Médico</label>
-                    <select id="selectMedico" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
-                        <option value="">Cargando médicos...</option>
-                    </select>
+        <!-- SECCIÓN MÉDICO -->
+        <div id="wrapperMedico" class="hidden">
+            <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="mb-6">
+                    <h2 class="text-lg font-bold text-slate-800">Agenda Médica</h2>
+                    <p class="text-xs text-slate-500">Gestión de pacientes y estados de citas</p>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Fecha y Hora</label>
-                    <input type="datetime-local" id="fechaCita" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-slate-400 uppercase text-xs">
+                                <th class="py-3 px-4">Paciente</th>
+                                <th class="py-3 px-4">Fecha</th>
+                                <th class="py-3 px-4">Síntomas / Motivo</th>
+                                <th class="py-3 px-4">Acción / Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaCitasBodyMedico">
+                            <tr><td colspan="4" class="text-center py-6 text-slate-400">No hay citas asignadas.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Motivo de Consulta / Síntomas</label>
-                    <textarea id="motivoCita" rows="3" required placeholder="Describe brevemente tus síntomas..." class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"></textarea>
-                </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition duration-200 shadow-md">
-                    Confirmar Cita
-                </button>
-            </form>
-        </section>
+            </section>
+        </div>
 
-        <!-- Listado y Estado de Citas -->
-        <section id="sectionListado" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-2">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                <div>
-                    <h2 class="text-lg font-bold text-slate-800">Gestión de Citas</h2>
-                    <p class="text-xs text-slate-500">Monitoreo de agenda en tiempo real</p>
+        <!-- SECCIÓN ADMINISTRADOR -->
+        <div id="wrapperAdmin" class="hidden space-y-6">
+            <!-- Gestión de Usuarios -->
+            <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Panel de Administración - Control de Usuarios</h2>
+                        <p class="text-xs text-slate-500">Administra cuentas, roles y permisos del sistema</p>
+                    </div>
                 </div>
-            </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-slate-400 uppercase text-xs">
+                                <th class="py-3 px-4">Nombre</th>
+                                <th class="py-3 px-4">Correo</th>
+                                <th class="py-3 px-4">Rol Actual</th>
+                                <th class="py-3 px-4">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaUsuariosAdmin">
+                            <tr><td colspan="4" class="text-center py-6 text-slate-400">Cargando usuarios...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
 
-            <!-- Tarjetas de Resumen -->
-            <div class="grid grid-cols-3 gap-4 mb-6">
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
-                    <span class="block text-xs font-bold uppercase text-slate-400 mb-1">Total</span>
-                    <span id="totalCitas" class="text-xl font-bold text-slate-800">0</span>
+            <!-- Gestión Global de Citas -->
+            <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="mb-4">
+                    <h2 class="text-lg font-bold text-slate-800">Agenda Global del Sistema</h2>
+                    <p class="text-xs text-slate-500">Monitoreo completo de todas las citas agendadas</p>
                 </div>
-                <div class="bg-amber-50 p-4 rounded-xl border border-amber-100 text-center">
-                    <span class="block text-xs font-bold uppercase text-amber-600 mb-1">Pendientes</span>
-                    <span id="citasPendientes" class="text-xl font-bold text-amber-700">0</span>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-slate-400 uppercase text-xs">
+                                <th class="py-3 px-4">Paciente</th>
+                                <th class="py-3 px-4">Médico Asignado</th>
+                                <th class="py-3 px-4">Fecha</th>
+                                <th class="py-3 px-4">Motivo</th>
+                                <th class="py-3 px-4">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaCitasAdmin">
+                            <tr><td colspan="5" class="text-center py-6 text-slate-400">Cargando citas...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-center">
-                    <span class="block text-xs font-bold uppercase text-emerald-600 mb-1">Confirmadas</span>
-                    <span id="citasConfirmadas" class="text-xl font-bold text-emerald-700">0</span>
-                </div>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-sm">
-                    <thead>
-                        <tr class="border-b border-slate-200 text-slate-400 uppercase text-xs">
-                            <th class="py-3 px-4">Paciente / Médico</th>
-                            <th class="py-3 px-4">Fecha</th>
-                            <th class="py-3 px-4">Síntomas / Motivo</th>
-                            <th class="py-3 px-4">Estado / Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaCitasBody">
-                        <tr>
-                            <td colspan="4" class="text-center py-6 text-slate-400">No hay citas registradas aún.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+            </section>
+        </div>
 
     </main>
 
@@ -121,150 +178,74 @@
         }
 
         document.addEventListener("DOMContentLoaded", () => {
-            document.getElementById('userRoleBadge').textContent = userRole === 'doctor' ? 'Médico' : 'Paciente';
+            const roleBadge = document.getElementById('userRoleBadge');
+            roleBadge.textContent = userRole === 'admin' ? 'Administrador' : (userRole === 'doctor' ? 'Médico' : 'Paciente');
             document.getElementById('welcomeUser').textContent = `Bienvenido, ${userName}`;
 
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            const fechaInput = document.getElementById('fechaCita');
-            if (fechaInput) {
-                fechaInput.min = now.toISOString().slice(0, 16);
-            }
-
-            if (userRole === 'doctor') {
-                document.getElementById('sectionPaciente').style.display = 'none';
-                document.getElementById('sectionListado').classList.remove('lg:col-span-2');
-                document.getElementById('sectionListado').classList.add('lg:col-span-3');
+            if (userRole === 'admin') {
+                document.getElementById('wrapperPaciente').style.display = 'none';
+                document.getElementById('wrapperMedico').style.display = 'none';
+                document.getElementById('wrapperAdmin').style.display = 'block';
+                cargarPanelAdmin();
+            } else if (userRole === 'doctor') {
+                document.getElementById('wrapperPaciente').style.display = 'none';
+                document.getElementById('wrapperMedico').style.display = 'block';
+                cargarCitasMedico();
             } else {
-                cargarMedicos();
-            }
+                document.getElementById('wrapperPaciente').style.display = 'grid';
+                document.getElementById('wrapperMedico').style.display = 'none';
+                
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                const fechaInput = document.getElementById('fechaCita');
+                if (fechaInput) fechaInput.min = now.toISOString().slice(0, 16);
 
-            cargarCitas();
+                cargarMedicos();
+                cargarCitasPaciente();
+            }
         });
 
+        // --- FUNCIONES PACIENTE ---
         async function cargarMedicos() {
             const select = document.getElementById('selectMedico');
             try {
                 const response = await fetch(`${API_URL}/api/auth/doctors`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
                 const medicos = await response.json();
                 select.innerHTML = '<option value="">Selecciona un médico</option>';
-
                 if (Array.isArray(medicos) && medicos.length > 0) {
-                    medicos.forEach(medico => {
-                        select.innerHTML += `<option value="${medico._id}">Dr. ${medico.name}</option>`;
-                    });
+                    medicos.forEach(m => { select.innerHTML += `<option value="${m._id}">Dr. ${m.name}</option>`; });
                 } else {
                     select.innerHTML = '<option value="">No hay médicos disponibles</option>';
                 }
-            } catch (error) {
-                console.error("Error al obtener médicos:", error);
-                select.innerHTML = '<option value="">Error al cargar médicos</option>';
-            }
+            } catch (err) { console.error(err); }
         }
 
-        async function cargarCitas() {
+        async function cargarCitasPaciente() {
             try {
                 const response = await fetch(`${API_URL}/api/appointments`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const citas = await response.json();
-
-                const tbody = document.getElementById('tablaCitasBody');
-                const totalCitasEl = document.getElementById('totalCitas');
-                const citasPendientesEl = document.getElementById('citasPendientes');
-                const citasConfirmadasEl = document.getElementById('citasConfirmadas');
-
+                const tbody = document.getElementById('tablaCitasBodyPaciente');
                 if (Array.isArray(citas) && citas.length > 0) {
-                    totalCitasEl.textContent = citas.length;
-                    let pendientes = 0;
-                    let confirmadas = 0;
-
                     tbody.innerHTML = '';
-                    citas.forEach(cita => {
-                        if (cita.status === 'confirmed') confirmadas++;
-                        else pendientes++;
-
-                        const fechaFormateada = cita.date ? new Date(cita.date).toLocaleString() : 'Fecha no especificada';
-                        
-                        let nombreContraparte = 'Desconocido';
-                        if (userRole === 'doctor') {
-                            nombreContraparte = cita.patient && cita.patient.name ? cita.patient.name : 'Paciente';
-                        } else {
-                            nombreContraparte = cita.doctor && cita.doctor.name ? `Dr. ${cita.doctor.name}` : 'Médico';
-                        }
-
-                        const motivoTexto = cita.reason || cita.symptoms || 'Sin motivo especificado';
-
-                        let estadoHtml = '';
-                        if (userRole === 'doctor') {
-                            if (cita.status === 'confirmed') {
-                                estadoHtml = `
-                                    <div class="flex items-center gap-2">
-                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-600">Confirmada</span>
-                                        <button onclick="cambiarEstado('${cita._id}', 'pending')" class="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded hover:bg-amber-200">Hacer Pendiente</button>
-                                    </div>
-                                `;
-                            } else {
-                                estadoHtml = `
-                                    <div class="flex items-center gap-2">
-                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-600">Pendiente</span>
-                                        <button onclick="cambiarEstado('${cita._id}', 'confirmed')" class="text-xs bg-emerald-600 text-white px-2.5 py-1 rounded hover:bg-emerald-700 shadow-sm">Confirmar</button>
-                                    </div>
-                                `;
-                            }
-                        } else {
-                            estadoHtml = `
-                                <span class="px-2.5 py-1 text-xs font-semibold rounded-full ${cita.status === 'confirmed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}">
-                                    ${cita.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}
-                                </span>
-                            `;
-                        }
-
+                    citas.forEach(c => {
+                        const fecha = c.date ? new Date(c.date).toLocaleString() : '';
+                        const doc = c.doctor ? `Dr. ${c.doctor.name}` : 'Médico';
                         tbody.innerHTML += `
                             <tr class="border-b border-slate-100 hover:bg-slate-50">
-                                <td class="py-3 px-4 font-medium text-slate-800">${nombreContraparte}</td>
-                                <td class="py-3 px-4 text-slate-600">${fechaFormateada}</td>
-                                <td class="py-3 px-4 text-slate-600 font-normal">${motivoTexto}</td>
-                                <td class="py-3 px-4">${estadoHtml}</td>
-                            </tr>
-                        `;
+                                <td class="py-3 px-4 font-medium text-slate-800">${doc}</td>
+                                <td class="py-3 px-4 text-slate-600">${fecha}</td>
+                                <td class="py-3 px-4 text-slate-600">${c.reason || 'Sin motivo'}</td>
+                                <td class="py-3 px-4"><span class="px-2.5 py-1 text-xs font-semibold rounded-full ${c.status === 'confirmed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}">${c.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}</span></td>
+                            </tr>`;
                     });
-
-                    citasPendientesEl.textContent = pendientes;
-                    citasConfirmadasEl.textContent = confirmadas;
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">No hay citas registradas aún.</td></tr>`;
-                    totalCitasEl.textContent = '0';
-                    citasPendientesEl.textContent = '0';
-                    citasConfirmadasEl.textContent = '0';
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">No hay citas registradas.</td></tr>`;
                 }
-            } catch (error) {
-                console.error("Error al cargar citas:", error);
-            }
-        }
-
-        async function cambiarEstado(citaId, nuevoEstado) {
-            try {
-                const response = await fetch(`${API_URL}/api/appointments/${citaId}/status`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ status: nuevoEstado })
-                });
-
-                if (response.ok) {
-                    cargarCitas();
-                } else {
-                    alert("Error al actualizar el estado de la cita");
-                }
-            } catch (error) {
-                console.error("Error de conexión:", error);
-            }
+            } catch (err) { console.error(err); }
         }
 
         async function agendarCita(event) {
@@ -272,45 +253,157 @@
             const doctor = document.getElementById('selectMedico').value;
             const date = document.getElementById('fechaCita').value;
             const reason = document.getElementById('motivoCita').value;
+            const alerta = document.getElementById('alertaDashboard');
 
             try {
-                const response = await fetch(`${API_URL}/api/appointments`, {
+                const res = await fetch(`${API_URL}/api/appointments`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ doctor, date, reason })
                 });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    const alerta = document.getElementById('alertaDashboard');
+                const data = await res.json();
+                if (res.ok) {
                     alerta.textContent = "¡Cita agendada con éxito!";
                     alerta.className = "mb-4 p-3 rounded-lg text-sm text-center font-medium bg-emerald-50 text-emerald-600 border border-emerald-200";
                     alerta.classList.remove('hidden');
-
                     document.getElementById('formCita').reset();
-                    
-                    // Restablecer la fecha mínima en el input
-                    const now = new Date();
-                    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-                    document.getElementById('fechaCita').min = now.toISOString().slice(0, 16);
-
-                    cargarCitas();
+                    cargarCitasPaciente();
                 } else {
-                    const alerta = document.getElementById('alertaDashboard');
-                    alerta.textContent = data.message || "Error al agendar cita";
+                    alerta.textContent = data.message || "Error al agendar";
                     alerta.className = "mb-4 p-3 rounded-lg text-sm text-center font-medium bg-red-50 text-red-600 border border-red-200";
                     alerta.classList.remove('hidden');
                 }
-            } catch (error) {
-                const alerta = document.getElementById('alertaDashboard');
-                alerta.textContent = "Error de conexión con el servidor";
-                alerta.className = "mb-4 p-3 rounded-lg text-sm text-center font-medium bg-red-50 text-red-600 border border-red-200";
-                alerta.classList.remove('hidden');
-            }
+            } catch (err) { console.error(err); }
+        }
+
+        // --- FUNCIONES MÉDICO ---
+        async function cargarCitasMedico() {
+            try {
+                const response = await fetch(`${API_URL}/api/appointments`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const citas = await response.json();
+                const tbody = document.getElementById('tablaCitasBodyMedico');
+                if (Array.isArray(citas) && citas.length > 0) {
+                    tbody.innerHTML = '';
+                    citas.forEach(c => {
+                        const fecha = c.date ? new Date(c.date).toLocaleString() : '';
+                        const paciente = c.patient ? c.patient.name : 'Paciente';
+                        const btnAccion = c.status === 'confirmed' 
+                            ? `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-600">Confirmada</span> <button onclick="cambiarEstado('${c._id}', 'pending')" class="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded">Hacer Pendiente</button>`
+                            : `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-600">Pendiente</span> <button onclick="cambiarEstado('${c._id}', 'confirmed')" class="ml-2 text-xs bg-emerald-600 text-white px-2.5 py-1 rounded shadow-sm">Confirmar</button>`;
+
+                        tbody.innerHTML += `
+                            <tr class="border-b border-slate-100 hover:bg-slate-50">
+                                <td class="py-3 px-4 font-medium text-slate-800">${paciente}</td>
+                                <td class="py-3 px-4 text-slate-600">${fecha}</td>
+                                <td class="py-3 px-4 text-slate-600">${c.reason || 'Sin motivo'}</td>
+                                <td class="py-3 px-4">${btnAccion}</td>
+                            </tr>`;
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">No hay citas asignadas.</td></tr>`;
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function cambiarEstado(id, nuevoEstado) {
+            try {
+                const res = await fetch(`${API_URL}/api/appointments/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ status: nuevoEstado })
+                });
+                if (res.ok) cargarCitasMedico();
+            } catch (err) { console.error(err); }
+        }
+
+        // --- FUNCIONES ADMINISTRADOR ---
+        async function cargarPanelAdmin() {
+            try {
+                // Cargar lista de usuarios
+                const resUsers = await fetch(`${API_URL}/api/admin/users`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const users = await resUsers.json();
+                const tbodyUsers = document.getElementById('tablaUsuariosAdmin');
+                if (Array.isArray(users)) {
+                    tbodyUsers.innerHTML = '';
+                    users.forEach(u => {
+                        tbodyUsers.innerHTML += `
+                            <tr class="border-b border-slate-100 hover:bg-slate-50">
+                                <td class="py-3 px-4 font-medium text-slate-800">${u.name}</td>
+                                <td class="py-3 px-4 text-slate-600">${u.email}</td>
+                                <td class="py-3 px-4">
+                                    <select onchange="cambiarRolUsuario('${u._id}', this.value)" class="text-xs px-2 py-1 border rounded bg-white font-semibold uppercase text-blue-600">
+                                        <option value="patient" ${u.role === 'patient' ? 'selected' : ''}>Paciente</option>
+                                        <option value="doctor" ${u.role === 'doctor' ? 'selected' : ''}>Médico</option>
+                                        <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                    </select>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <button onclick="eliminarUsuario('${u._id}')" class="text-xs bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded transition">Eliminar</button>
+                                </td>
+                            </tr>`;
+                    });
+                }
+
+                // Cargar todas las citas del sistema
+                const resCitas = await fetch(`${API_URL}/api/admin/appointments`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const citas = await resCitas.json();
+                const tbodyCitas = document.getElementById('tablaCitasAdmin');
+                if (Array.isArray(citas) && citas.length > 0) {
+                    tbodyCitas.innerHTML = '';
+                    citas.forEach(c => {
+                        const fecha = c.date ? new Date(c.date).toLocaleString() : '';
+                        const paciente = c.patient ? c.patient.name : 'Desconocido';
+                        const medico = c.doctor ? `Dr. ${c.doctor.name}` : 'Desconocido';
+                        tbodyCitas.innerHTML += `
+                            <tr class="border-b border-slate-100 hover:bg-slate-50">
+                                <td class="py-3 px-4 font-medium text-slate-800">${paciente}</td>
+                                <td class="py-3 px-4 text-slate-600">${medico}</td>
+                                <td class="py-3 px-4 text-slate-600">${fecha}</td>
+                                <td class="py-3 px-4 text-slate-600">${c.reason || 'Sin motivo'}</td>
+                                <td class="py-3 px-4"><span class="px-2.5 py-1 text-xs font-semibold rounded-full ${c.status === 'confirmed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}">${c.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}</span></td>
+                            </tr>`;
+                    });
+                } else {
+                    tbodyCitas.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">No hay citas en el sistema.</td></tr>`;
+                }
+            } catch (err) { console.error("Error cargando panel admin:", err); }
+        }
+
+        async function cambiarRolUsuario(userId, nuevoRol) {
+            try {
+                const res = await fetch(`${API_URL}/api/admin/users/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ role: nuevoRol })
+                });
+                if (res.ok) {
+                    alert("Rol actualizado con éxito");
+                    cargarPanelAdmin();
+                } else {
+                    alert("Error al actualizar rol");
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        async function eliminarUsuario(userId) {
+            if (!confirm("¿Estás seguro de eliminar este usuario y sus citas asociadas?")) return;
+            try {
+                const res = await fetch(`${API_URL}/api/admin/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    cargarPanelAdmin();
+                } else {
+                    alert("Error al eliminar usuario");
+                }
+            } catch (err) { console.error(err); }
         }
 
         function cerrarSesion() {
