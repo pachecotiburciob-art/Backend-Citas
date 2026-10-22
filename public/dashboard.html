@@ -35,8 +35,8 @@
     <!-- Contenido Principal -->
     <main class="max-w-7xl mx-auto">
         
-        <!-- SECCIÓN PACIENTE -->
-        <div id="wrapperPaciente" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- SECCIÓN PACIENTE (Acceso exclusivo Paciente) -->
+        <div id="wrapperPaciente" class="hidden grid-cols-1 lg:grid-cols-3 gap-6">
             <section id="sectionPaciente" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-1">
                 <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                     <span>📅</span> Agendar Cita Médica
@@ -88,35 +88,45 @@
             </section>
         </div>
 
-        <!-- SECCIÓN MÉDICO -->
-        <div id="wrapperMedico" class="hidden">
+        <!-- SECCIÓN MÉDICO (Acceso exclusivo Médico) -->
+        <div id="wrapperMedico" class="hidden space-y-6">
             <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <div class="mb-6">
-                    <h2 class="text-lg font-bold text-slate-800">Agenda Médica</h2>
-                    <p class="text-xs text-slate-500">Gestión de pacientes y estados de citas</p>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Agenda y Consultas Médicas</h2>
+                        <p class="text-xs text-slate-500">Gestión de pacientes y control de atenciones</p>
+                    </div>
+                    <!-- Filtro para el Médico: Pendientes / Confirmadas (Historial) -->
+                    <div class="flex gap-2">
+                        <button onclick="filtrarCitasMedico('todas')" id="btnFiltroTodas" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm">Todas</button>
+                        <button onclick="filtrarCitasMedico('pending')" id="btnFiltroPendientes" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200">Pendientes</button>
+                        <button onclick="filtrarCitasMedico('confirmed')" id="btnFiltroConfirmadas" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200">Atendidas / Confirmadas</button>
+                    </div>
                 </div>
+
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-sm">
                         <thead>
                             <tr class="border-b border-slate-200 text-slate-400 uppercase text-xs">
                                 <th class="py-3 px-4">Paciente</th>
-                                <th class="py-3 px-4">Fecha</th>
+                                <th class="py-3 px-4">Correo Paciente</th>
+                                <th class="py-3 px-4">Fecha y Hora</th>
                                 <th class="py-3 px-4">Síntomas / Motivo</th>
                                 <th class="py-3 px-4">Acción / Estado</th>
                             </tr>
                         </thead>
                         <tbody id="tablaCitasBodyMedico">
-                            <tr><td colspan="4" class="text-center py-6 text-slate-400">No hay citas asignadas.</td></tr>
+                            <tr><td colspan="5" class="text-center py-6 text-slate-400">No hay citas asignadas.</td></tr>
                         </tbody>
                     </table>
                 </div>
             </section>
         </div>
 
-        <!-- SECCIÓN ADMINISTRADOR -->
+        <!-- SECCIÓN ADMINISTRADOR (RESTRICCIÓN STRICTA: Solo el Admin puede ver esto) -->
         <div id="wrapperAdmin" class="hidden space-y-6">
             
-            <!-- Métricas / Resumen -->
+            <!-- Métricas institucionales -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 text-center">
                     <span class="block text-xs font-bold uppercase text-slate-400">Total Usuarios</span>
@@ -136,7 +146,7 @@
                 </div>
             </div>
 
-            <!-- Panel Crear Nuevo Usuario / Admin -->
+            <!-- Crear Nuevo Usuario / Admin -->
             <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <h2 class="text-lg font-bold text-slate-800 mb-2">➕ Crear Nuevo Usuario / Administrador</h2>
                 <p class="text-xs text-slate-500 mb-4">Registra cuentas institucionales de tipo Paciente, Médico o Administrador.</p>
@@ -158,7 +168,7 @@
                 </form>
             </section>
 
-            <!-- Gestión de Usuarios y Roles -->
+            <!-- Control de Usuarios y Roles -->
             <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="mb-4">
                     <h2 class="text-lg font-bold text-slate-800">Control de Usuarios y Roles</h2>
@@ -214,27 +224,34 @@
         const userRole = localStorage.getItem('userRole') || 'patient';
         const userName = localStorage.getItem('userName') || 'Usuario';
 
+        let listaCitasMedicoCache = [];
+
         if (!token) {
             window.location.href = 'index.html';
         }
 
         document.addEventListener("DOMContentLoaded", () => {
             const roleBadge = document.getElementById('userRoleBadge');
-            roleBadge.textContent = userRole === 'admin' ? 'Administrador' : (userRole === 'doctor' ? 'Médico' : 'Paciente');
             document.getElementById('welcomeUser').textContent = `Bienvenido, ${userName}`;
 
+            // Ocultar todos los páneles primero por seguridad estricta
+            document.getElementById('wrapperPaciente').classList.add('hidden');
+            document.getElementById('wrapperMedico').classList.add('hidden');
+            document.getElementById('wrapperAdmin').classList.add('hidden');
+
+            // Control de acceso según el Rol
             if (userRole === 'admin') {
-                document.getElementById('wrapperPaciente').style.display = 'none';
-                document.getElementById('wrapperMedico').style.display = 'none';
-                document.getElementById('wrapperAdmin').style.display = 'block';
+                roleBadge.textContent = 'Administrador';
+                document.getElementById('wrapperAdmin').classList.remove('hidden');
                 cargarPanelAdmin();
             } else if (userRole === 'doctor') {
-                document.getElementById('wrapperPaciente').style.display = 'none';
-                document.getElementById('wrapperMedico').style.display = 'block';
+                roleBadge.textContent = 'Médico';
+                document.getElementById('wrapperMedico').classList.remove('hidden');
                 cargarCitasMedico();
-            } else {
-                document.getElementById('wrapperPaciente').style.display = 'grid';
-                document.getElementById('wrapperMedico').style.display = 'none';
+            } else if (userRole === 'patient') {
+                roleBadge.textContent = 'Paciente';
+                document.getElementById('wrapperPaciente').classList.remove('hidden');
+                document.getElementById('wrapperPaciente').classList.add('grid');
                 
                 const now = new Date();
                 now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -243,6 +260,9 @@
 
                 cargarMedicos();
                 cargarCitasPaciente();
+            } else {
+                // Si el rol es inválido, cerrar sesión por seguridad
+                cerrarSesion();
             }
         });
 
@@ -317,35 +337,67 @@
             } catch (err) { console.error(err); }
         }
 
-        // --- FUNCIONES MÉDICO ---
+        // --- FUNCIONES MÉDICO CON FILTROS ---
         async function cargarCitasMedico() {
             try {
                 const response = await fetch(`${API_URL}/api/appointments`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const citas = await response.json();
-                const tbody = document.getElementById('tablaCitasBodyMedico');
-                if (Array.isArray(citas) && citas.length > 0) {
-                    tbody.innerHTML = '';
-                    citas.forEach(c => {
-                        const fecha = c.date ? new Date(c.date).toLocaleString() : '';
-                        const paciente = c.patient ? c.patient.name : 'Paciente';
-                        const btnAccion = c.status === 'confirmed' 
-                            ? `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-600">Confirmada</span> <button onclick="cambiarEstado('${c._id}', 'pending')" class="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded">Hacer Pendiente</button>`
-                            : `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-600">Pendiente</span> <button onclick="cambiarEstado('${c._id}', 'confirmed')" class="ml-2 text-xs bg-emerald-600 text-white px-2.5 py-1 rounded shadow-sm">Confirmar</button>`;
-
-                        tbody.innerHTML += `
-                            <tr class="border-b border-slate-100 hover:bg-slate-50">
-                                <td class="py-3 px-4 font-medium text-slate-800">${paciente}</td>
-                                <td class="py-3 px-4 text-slate-600">${fecha}</td>
-                                <td class="py-3 px-4 text-slate-600">${c.reason || 'Sin motivo'}</td>
-                                <td class="py-3 px-4">${btnAccion}</td>
-                            </tr>`;
-                    });
-                } else {
-                    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-slate-400">No hay citas asignadas.</td></tr>`;
+                if (Array.isArray(citas)) {
+                    listaCitasMedicoCache = citas;
+                    renderizarTablaMedico(citas);
                 }
             } catch (err) { console.error(err); }
+        }
+
+        function renderizarTablaMedico(citas) {
+            const tbody = document.getElementById('tablaCitasBodyMedico');
+            if (citas.length > 0) {
+                tbody.innerHTML = '';
+                citas.forEach(c => {
+                    const fecha = c.date ? new Date(c.date).toLocaleString() : '';
+                    const pacienteNombre = c.patient ? c.patient.name : 'Paciente';
+                    const pacienteEmail = c.patient ? c.patient.email : 'Sin correo';
+                    
+                    const btnAccion = c.status === 'confirmed' 
+                        ? `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-600">Atendida / Confirmada</span> <button onclick="cambiarEstado('${c._id}', 'pending')" class="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded hover:bg-amber-200">Revertir</button>`
+                        : `<span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-600">Pendiente</span> <button onclick="cambiarEstado('${c._id}', 'confirmed')" class="ml-2 text-xs bg-emerald-600 text-white px-2.5 py-1 rounded shadow-sm hover:bg-emerald-700">Marcar Atendida</button>`;
+
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50">
+                            <td class="py-3 px-4 font-medium text-slate-800">${pacienteNombre}</td>
+                            <td class="py-3 px-4 text-slate-500">${pacienteEmail}</td>
+                            <td class="py-3 px-4 text-slate-600">${fecha}</td>
+                            <td class="py-3 px-4 text-slate-600">${c.reason || 'Sin motivo'}</td>
+                            <td class="py-3 px-4">${btnAccion}</td>
+                        </tr>`;
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">No hay consultas en este filtro.</td></tr>`;
+            }
+        }
+
+        function filtrarCitasMedico(filtro) {
+            const btnTodas = document.getElementById('btnFiltroTodas');
+            const btnPendientes = document.getElementById('btnFiltroPendientes');
+            const btnConfirmadas = document.getElementById('btnFiltroConfirmadas');
+
+            // Resetear estilos de botones
+            [btnTodas, btnPendientes, btnConfirmadas].forEach(b => {
+                b.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200";
+            });
+
+            if (filtro === 'todas') {
+                btnTodas.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm";
+                renderizarTablaMedico(listaCitasMedicoCache);
+            } else if (filtro === 'pending') {
+                btnPendientes.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm";
+                renderizarTablaMedico(listaCitasMedicoCache.filter(c => c.status === 'pending'));
+            } else if (filtro === 'confirmed') {
+                btnConfirmadas.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm";
+                renderizarTablaMedico(listaCitasMedicoCache.filter(c => c.status === 'confirmed'));
+            }
         }
 
         async function cambiarEstado(id, nuevoEstado) {
@@ -362,7 +414,6 @@
         // --- FUNCIONES ADMINISTRADOR ---
         async function cargarPanelAdmin() {
             try {
-                // Cargar lista de usuarios
                 const resUsers = await fetch(`${API_URL}/api/admin/users`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -400,7 +451,6 @@
                     document.getElementById('metricPacientes').textContent = cantPacientes;
                 }
 
-                // Cargar todas las citas del sistema
                 const resCitas = await fetch(`${API_URL}/api/admin/appointments`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
