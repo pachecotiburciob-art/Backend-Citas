@@ -23,7 +23,7 @@
         </div>
         <div class="flex items-center space-x-4">
             <div class="text-right hidden sm:block">
-                <span class="block text-xs font-bold uppercase text-slate-400">Usuario</span>
+                <span class="block text-xs font-bold uppercase text-slate-400">Tipo de Usuario</span>
                 <span id="userRoleBadge" class="inline-block px-2.5 py-0.5 text-xs font-semibold bg-blue-50 text-blue-600 rounded-full uppercase">CARGANDO...</span>
             </div>
             <button onclick="cerrarSesion()" class="bg-red-50 hover:bg-red-100 text-red-600 text-sm font-medium px-4 py-2 rounded-xl transition duration-200">
@@ -115,13 +115,54 @@
 
         <!-- SECCIÓN ADMINISTRADOR -->
         <div id="wrapperAdmin" class="hidden space-y-6">
-            <!-- Gestión de Usuarios -->
+            
+            <!-- Métricas / Resumen -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 text-center">
+                    <span class="block text-xs font-bold uppercase text-slate-400">Total Usuarios</span>
+                    <span id="metricUsuarios" class="text-2xl font-extrabold text-blue-600">0</span>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 text-center">
+                    <span class="block text-xs font-bold uppercase text-slate-400">Médicos</span>
+                    <span id="metricMedicos" class="text-2xl font-extrabold text-indigo-600">0</span>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 text-center">
+                    <span class="block text-xs font-bold uppercase text-slate-400">Pacientes</span>
+                    <span id="metricPacientes" class="text-2xl font-extrabold text-emerald-600">0</span>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 text-center">
+                    <span class="block text-xs font-bold uppercase text-slate-400">Total Citas</span>
+                    <span id="metricCitas" class="text-2xl font-extrabold text-amber-600">0</span>
+                </div>
+            </div>
+
+            <!-- Panel Crear Nuevo Usuario / Admin -->
             <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <div class="flex justify-between items-center mb-4">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-800">Panel de Administración - Control de Usuarios</h2>
-                        <p class="text-xs text-slate-500">Administra cuentas, roles y permisos del sistema</p>
-                    </div>
+                <h2 class="text-lg font-bold text-slate-800 mb-2">➕ Crear Nuevo Usuario / Administrador</h2>
+                <p class="text-xs text-slate-500 mb-4">Registra cuentas institucionales de tipo Paciente, Médico o Administrador.</p>
+                
+                <div id="alertaCrearAdmin" class="hidden mb-4 p-3 rounded-lg text-sm text-center font-medium"></div>
+
+                <form onsubmit="crearUsuarioAdmin(event)" class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <input type="text" id="newAdminName" placeholder="Nombre completo" required class="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="email" id="newAdminEmail" placeholder="Correo electrónico" required class="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="password" id="newAdminPassword" placeholder="Contraseña" required class="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select id="newAdminRole" required class="px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="patient">Paciente</option>
+                        <option value="doctor">Médico</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-lg text-sm transition shadow-sm">
+                        Crear Cuenta
+                    </button>
+                </form>
+            </section>
+
+            <!-- Gestión de Usuarios y Roles -->
+            <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="mb-4">
+                    <h2 class="text-lg font-bold text-slate-800">Control de Usuarios y Roles</h2>
+                    <p class="text-xs text-slate-500">Modifica roles o elimina cuentas del sistema</p>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-sm">
@@ -129,7 +170,7 @@
                             <tr class="border-b border-slate-200 text-slate-400 uppercase text-xs">
                                 <th class="py-3 px-4">Nombre</th>
                                 <th class="py-3 px-4">Correo</th>
-                                <th class="py-3 px-4">Rol Actual</th>
+                                <th class="py-3 px-4">Tipo de Usuario (Rol)</th>
                                 <th class="py-3 px-4">Acciones</th>
                             </tr>
                         </thead>
@@ -140,11 +181,11 @@
                 </div>
             </section>
 
-            <!-- Gestión Global de Citas -->
+            <!-- Agenda Global de Citas -->
             <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="mb-4">
-                    <h2 class="text-lg font-bold text-slate-800">Agenda Global del Sistema</h2>
-                    <p class="text-xs text-slate-500">Monitoreo completo de todas las citas agendadas</p>
+                    <h2 class="text-lg font-bold text-slate-800">Agenda Global de Citas</h2>
+                    <p class="text-xs text-slate-500">Monitoreo completo de todas las consultas registradas</p>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-sm">
@@ -327,25 +368,36 @@
                 });
                 const users = await resUsers.json();
                 const tbodyUsers = document.getElementById('tablaUsuariosAdmin');
+                
                 if (Array.isArray(users)) {
                     tbodyUsers.innerHTML = '';
+                    let cantMedicos = 0;
+                    let cantPacientes = 0;
+
                     users.forEach(u => {
+                        if (u.role === 'doctor') cantMedicos++;
+                        if (u.role === 'patient') cantPacientes++;
+
                         tbodyUsers.innerHTML += `
                             <tr class="border-b border-slate-100 hover:bg-slate-50">
                                 <td class="py-3 px-4 font-medium text-slate-800">${u.name}</td>
                                 <td class="py-3 px-4 text-slate-600">${u.email}</td>
                                 <td class="py-3 px-4">
-                                    <select onchange="cambiarRolUsuario('${u._id}', this.value)" class="text-xs px-2 py-1 border rounded bg-white font-semibold uppercase text-blue-600">
+                                    <select onchange="cambiarRolUsuario('${u._id}', this.value)" class="text-xs px-2.5 py-1 border rounded-lg bg-white font-semibold uppercase text-blue-600 focus:outline-none">
                                         <option value="patient" ${u.role === 'patient' ? 'selected' : ''}>Paciente</option>
                                         <option value="doctor" ${u.role === 'doctor' ? 'selected' : ''}>Médico</option>
-                                        <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                        <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Administrador</option>
                                     </select>
                                 </td>
                                 <td class="py-3 px-4">
-                                    <button onclick="eliminarUsuario('${u._id}')" class="text-xs bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded transition">Eliminar</button>
+                                    <button onclick="eliminarUsuario('${u._id}')" class="text-xs bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded-lg font-medium transition">Eliminar</button>
                                 </td>
                             </tr>`;
                     });
+
+                    document.getElementById('metricUsuarios').textContent = users.length;
+                    document.getElementById('metricMedicos').textContent = cantMedicos;
+                    document.getElementById('metricPacientes').textContent = cantPacientes;
                 }
 
                 // Cargar todas las citas del sistema
@@ -354,25 +406,65 @@
                 });
                 const citas = await resCitas.json();
                 const tbodyCitas = document.getElementById('tablaCitasAdmin');
-                if (Array.isArray(citas) && citas.length > 0) {
-                    tbodyCitas.innerHTML = '';
-                    citas.forEach(c => {
-                        const fecha = c.date ? new Date(c.date).toLocaleString() : '';
-                        const paciente = c.patient ? c.patient.name : 'Desconocido';
-                        const medico = c.doctor ? `Dr. ${c.doctor.name}` : 'Desconocido';
-                        tbodyCitas.innerHTML += `
-                            <tr class="border-b border-slate-100 hover:bg-slate-50">
-                                <td class="py-3 px-4 font-medium text-slate-800">${paciente}</td>
-                                <td class="py-3 px-4 text-slate-600">${medico}</td>
-                                <td class="py-3 px-4 text-slate-600">${fecha}</td>
-                                <td class="py-3 px-4 text-slate-600">${c.reason || 'Sin motivo'}</td>
-                                <td class="py-3 px-4"><span class="px-2.5 py-1 text-xs font-semibold rounded-full ${c.status === 'confirmed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}">${c.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}</span></td>
-                            </tr>`;
-                    });
-                } else {
-                    tbodyCitas.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">No hay citas en el sistema.</td></tr>`;
+
+                if (Array.isArray(citas)) {
+                    document.getElementById('metricCitas').textContent = citas.length;
+
+                    if (citas.length > 0) {
+                        tbodyCitas.innerHTML = '';
+                        citas.forEach(c => {
+                            const fecha = c.date ? new Date(c.date).toLocaleString() : '';
+                            const paciente = c.patient ? c.patient.name : 'Desconocido';
+                            const medico = c.doctor ? `Dr. ${c.doctor.name}` : 'Desconocido';
+                            tbodyCitas.innerHTML += `
+                                <tr class="border-b border-slate-100 hover:bg-slate-50">
+                                    <td class="py-3 px-4 font-medium text-slate-800">${paciente}</td>
+                                    <td class="py-3 px-4 text-slate-600">${medico}</td>
+                                    <td class="py-3 px-4 text-slate-600">${fecha}</td>
+                                    <td class="py-3 px-4 text-slate-600">${c.reason || 'Sin motivo'}</td>
+                                    <td class="py-3 px-4"><span class="px-2.5 py-1 text-xs font-semibold rounded-full ${c.status === 'confirmed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}">${c.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}</span></td>
+                                </tr>`;
+                        });
+                    } else {
+                        tbodyCitas.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">No hay citas en el sistema.</td></tr>`;
+                    }
                 }
             } catch (err) { console.error("Error cargando panel admin:", err); }
+        }
+
+        async function crearUsuarioAdmin(event) {
+            event.preventDefault();
+            const name = document.getElementById('newAdminName').value;
+            const email = document.getElementById('newAdminEmail').value;
+            const password = document.getElementById('newAdminPassword').value;
+            const role = document.getElementById('newAdminRole').value;
+            const alerta = document.getElementById('alertaCrearAdmin');
+
+            try {
+                const res = await fetch(`${API_URL}/api/admin/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ name, email, password, role })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alerta.textContent = "¡Usuario creado exitosamente!";
+                    alerta.className = "mb-4 p-3 rounded-lg text-sm text-center font-medium bg-emerald-50 text-emerald-600 border border-emerald-200";
+                    alerta.classList.remove('hidden');
+                    
+                    document.getElementById('newAdminName').value = '';
+                    document.getElementById('newAdminEmail').value = '';
+                    document.getElementById('newAdminPassword').value = '';
+
+                    cargarPanelAdmin();
+                } else {
+                    alerta.textContent = data.message || "Error al crear usuario";
+                    alerta.className = "mb-4 p-3 rounded-lg text-sm text-center font-medium bg-red-50 text-red-600 border border-red-200";
+                    alerta.classList.remove('hidden');
+                }
+            } catch (err) { console.error(err); }
         }
 
         async function cambiarRolUsuario(userId, nuevoRol) {
@@ -383,7 +475,6 @@
                     body: JSON.stringify({ role: nuevoRol })
                 });
                 if (res.ok) {
-                    alert("Rol actualizado con éxito");
                     cargarPanelAdmin();
                 } else {
                     alert("Error al actualizar rol");
