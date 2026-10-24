@@ -2,7 +2,6 @@ const User = require('../models/User');
 const Appointment = require('../models/Appointment');
 const bcrypt = require('bcryptjs');
 
-// Obtener todos los usuarios
 const getAllUsers = async (req, res) => {
     try {
         const users = await User.find().select('-password').sort({ createdAt: -1 });
@@ -13,7 +12,6 @@ const getAllUsers = async (req, res) => {
     }
 };
 
-// Crear un nuevo usuario (Paciente, Médico o Admin) directamente desde el panel
 const createUserByAdmin = async (req, res) => {
     try {
         const { name, email, password, role } = req.body;
@@ -45,7 +43,6 @@ const createUserByAdmin = async (req, res) => {
     }
 };
 
-// Actualizar rol de un usuario
 const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
@@ -72,7 +69,6 @@ const updateUser = async (req, res) => {
     }
 };
 
-// Eliminar usuario
 const deleteUser = async (req, res) => {
     try {
         const { id } = req.params;
@@ -90,7 +86,6 @@ const deleteUser = async (req, res) => {
     }
 };
 
-// Obtener todas las citas globales
 const getAllAppointmentsAdmin = async (req, res) => {
     try {
         const appointments = await Appointment.find()

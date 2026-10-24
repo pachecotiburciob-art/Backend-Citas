@@ -35,7 +35,7 @@
     <!-- Contenido Principal -->
     <main class="max-w-7xl mx-auto">
         
-        <!-- SECCIÓN PACIENTE (Acceso exclusivo Paciente) -->
+        <!-- SECCIÓN PACIENTE -->
         <div id="wrapperPaciente" class="hidden grid-cols-1 lg:grid-cols-3 gap-6">
             <section id="sectionPaciente" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-1">
                 <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -88,7 +88,7 @@
             </section>
         </div>
 
-        <!-- SECCIÓN MÉDICO (Acceso exclusivo Médico) -->
+        <!-- SECCIÓN MÉDICO -->
         <div id="wrapperMedico" class="hidden space-y-6">
             <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
@@ -96,14 +96,12 @@
                         <h2 class="text-lg font-bold text-slate-800">Agenda y Consultas Médicas</h2>
                         <p class="text-xs text-slate-500">Gestión de pacientes y control de atenciones</p>
                     </div>
-                    <!-- Filtro para el Médico: Pendientes / Confirmadas (Historial) -->
                     <div class="flex gap-2">
                         <button onclick="filtrarCitasMedico('todas')" id="btnFiltroTodas" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-sm">Todas</button>
                         <button onclick="filtrarCitasMedico('pending')" id="btnFiltroPendientes" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200">Pendientes</button>
                         <button onclick="filtrarCitasMedico('confirmed')" id="btnFiltroConfirmadas" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200">Atendidas / Confirmadas</button>
                     </div>
                 </div>
-
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-sm">
                         <thead>
@@ -123,10 +121,9 @@
             </section>
         </div>
 
-        <!-- SECCIÓN ADMINISTRADOR (RESTRICCIÓN STRICTA: Solo el Admin puede ver esto) -->
+        <!-- SECCIÓN ADMINISTRADOR -->
         <div id="wrapperAdmin" class="hidden space-y-6">
             
-            <!-- Métricas institucionales -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 text-center">
                     <span class="block text-xs font-bold uppercase text-slate-400">Total Usuarios</span>
@@ -146,13 +143,10 @@
                 </div>
             </div>
 
-            <!-- Crear Nuevo Usuario / Admin -->
             <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <h2 class="text-lg font-bold text-slate-800 mb-2">➕ Crear Nuevo Usuario / Administrador</h2>
                 <p class="text-xs text-slate-500 mb-4">Registra cuentas institucionales de tipo Paciente, Médico o Administrador.</p>
-                
                 <div id="alertaCrearAdmin" class="hidden mb-4 p-3 rounded-lg text-sm text-center font-medium"></div>
-
                 <form onsubmit="crearUsuarioAdmin(event)" class="grid grid-cols-1 md:grid-cols-5 gap-3">
                     <input type="text" id="newAdminName" placeholder="Nombre completo" required class="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <input type="email" id="newAdminEmail" placeholder="Correo electrónico" required class="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -168,7 +162,6 @@
                 </form>
             </section>
 
-            <!-- Control de Usuarios y Roles -->
             <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="mb-4">
                     <h2 class="text-lg font-bold text-slate-800">Control de Usuarios y Roles</h2>
@@ -191,7 +184,6 @@
                 </div>
             </section>
 
-            <!-- Agenda Global de Citas -->
             <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div class="mb-4">
                     <h2 class="text-lg font-bold text-slate-800">Agenda Global de Citas</h2>
@@ -234,12 +226,10 @@
             const roleBadge = document.getElementById('userRoleBadge');
             document.getElementById('welcomeUser').textContent = `Bienvenido, ${userName}`;
 
-            // Ocultar todos los páneles primero por seguridad estricta
             document.getElementById('wrapperPaciente').classList.add('hidden');
             document.getElementById('wrapperMedico').classList.add('hidden');
             document.getElementById('wrapperAdmin').classList.add('hidden');
 
-            // Control de acceso según el Rol
             if (userRole === 'admin') {
                 roleBadge.textContent = 'Administrador';
                 document.getElementById('wrapperAdmin').classList.remove('hidden');
@@ -261,12 +251,10 @@
                 cargarMedicos();
                 cargarCitasPaciente();
             } else {
-                // Si el rol es inválido, cerrar sesión por seguridad
                 cerrarSesion();
             }
         });
 
-        // --- FUNCIONES PACIENTE ---
         async function cargarMedicos() {
             const select = document.getElementById('selectMedico');
             try {
@@ -337,7 +325,6 @@
             } catch (err) { console.error(err); }
         }
 
-        // --- FUNCIONES MÉDICO CON FILTROS ---
         async function cargarCitasMedico() {
             try {
                 const response = await fetch(`${API_URL}/api/appointments`, {
@@ -383,7 +370,6 @@
             const btnPendientes = document.getElementById('btnFiltroPendientes');
             const btnConfirmadas = document.getElementById('btnFiltroConfirmadas');
 
-            // Resetear estilos de botones
             [btnTodas, btnPendientes, btnConfirmadas].forEach(b => {
                 b.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200";
             });
@@ -411,7 +397,6 @@
             } catch (err) { console.error(err); }
         }
 
-        // --- FUNCIONES ADMINISTRADOR ---
         async function cargarPanelAdmin() {
             try {
                 const resUsers = await fetch(`${API_URL}/api/admin/users`, {
